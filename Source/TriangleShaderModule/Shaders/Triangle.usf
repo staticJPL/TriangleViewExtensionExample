@@ -1,0 +1,46 @@
+﻿
+/* vertex attributes go here to input to the vertex shader */
+
+// Recall in and out are used to indicate the direction of data flow
+// between vertex and pixel shaders, and between different stages of the pipeline
+// by default data passed between vertex and pixel shader registers are by reference 
+// but with in/out it's a copy
+
+// "in" meaning that during that specific Shader stage, that variable will be an input
+// "out" meaning that during that specific Shader stage, that variable will be an output
+
+// We don't need vertex factory to draw a triangle, it's overkill
+// hence in out C++ shader code we can just send some float3 values to specify
+// the vertex points (x,y,z) to draw our triangle
+
+
+// This will be the Screen Pass Texture or Scene Color we use to draw the triangle on
+
+// Triangle Vertex PointA(0.0f,0.5f,0.0f), PointB(0.45f, -0.5f, 0.0f), PointC(-0.45f,-0.5f,0.0f)
+// PointA-C will be defined in C++ and passed to the Vertex Buffer as a Parameter.
+// The Color field will allow the pixel shader to interpolate the colors between the three verticies
+
+// These includes give us some shader function to play with from Unreal.
+#include "/Engine/Public/Platform.ush"
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/ScreenPass.ush"
+#include "/Engine/Private/PostProcessCommon.ush"
+
+void TriangleVS(
+	in float2 InPosition : ATTRIBUTE0,
+	in float4 InColor : ATTRIBUTE1,
+	out float4 OutPosition : SV_POSITION,
+	out float4 OutColor : COLOR0
+	)
+{
+	OutPosition = float4(InPosition, 0, 1);
+	OutColor = InColor;
+}
+
+void TrianglePS(
+	in float4 InPosition : SV_POSITION,
+	in float4 InColor : COLOR0,
+	out float4 OutColor : SV_Target0)
+{
+	OutColor = InColor;
+}
