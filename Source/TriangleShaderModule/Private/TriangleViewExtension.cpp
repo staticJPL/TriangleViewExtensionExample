@@ -103,8 +103,19 @@ void FTriangleViewExtension::SubscribeToPostProcessingPass(EPostProcessingPass P
 FScreenPassTexture FTriangleViewExtension::TrianglePass_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& View, const FPostProcessMaterialInputs& InOutInputs)
 {
 
-	const FScreenPassTexture SceneColor = InOutInputs.GetInput(EPostProcessMaterialInput::SceneColor);
+	FScreenPassTexture SceneColor(InOutInputs.GetInput(EPostProcessMaterialInput::SceneColor));
+
+	FScreenPassRenderTarget Output = InOutInputs.OverrideOutput;
+
+	// If the override output is provided, it means that this is the last pass in post processing.
+	// You need to do this since we cannot read from SceneColor and write to it (At least it's not supported by UE)
+	// OverrideOutput is also required to use so the Pass Sequence in PostProcessing.cpp knows this is the last pass so we don't get a bad texture from Scene Color on the next frame.
 	
+	if (!Output.IsValid())
+	{
+		Output = FScreenPassRenderTarget::CreateFromInput(GraphBuilder, SceneColor, View.GetOverwriteLoadAction(), TEXT("OverrideSceneColorTexture"));
+	}
+
 	RDG_GPU_STAT_SCOPE(GraphBuilder, TrianglePass)
 	RDG_EVENT_SCOPE(GraphBuilder, "TrianglePass");
 	
@@ -114,7 +125,8 @@ FScreenPassTexture FTriangleViewExtension::TrianglePass_RenderThread(FRDGBuilder
 		const FGlobalShaderMap* ViewShaderMap = static_cast<const FViewInfo&>(View).ShaderMap;
 		RenderTriangle(GraphBuilder,ViewShaderMap,ViewInfo,SceneColor);
 	}
-		return SceneColor;
+	
+	return MoveTemp(SceneColor);
 }
 
 // Draw Triangle Using PixelShaderUtil Helpers
@@ -123,12 +135,12 @@ void FTriangleViewExtension::RenderTriangle
 FRDGBuilder& GraphBuilder,
 const FGlobalShaderMap* ViewShaderMap,
 const FIntRect& ViewInfo,
-const FScreenPassTexture& SceneColor)
+const FScreenPassTexture& InSceneColor)
 {
 	// Begin Setup
 	// Shader Parameter Setup
 	FTrianglePSParams* PassParams = GraphBuilder.AllocParameters<FTrianglePSParams>();
-	PassParams->RenderTargets[0] = FRenderTargetBinding(SceneColor.Texture,ERenderTargetLoadAction::ELoad);
+	PassParams->RenderTargets[0] = FRenderTargetBinding(InSceneColor.Texture, ERenderTargetLoadAction::ELoad);
 
 	// Create Pixel Shader
 	TShaderMapRef<FTrianglePS> PixelShader(ViewShaderMap);

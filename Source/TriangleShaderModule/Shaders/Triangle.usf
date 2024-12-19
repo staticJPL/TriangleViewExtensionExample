@@ -42,5 +42,5 @@ void TrianglePS(
 	in float4 InColor : COLOR0,
 	out float4 OutColor : SV_Target0)
 {
-	OutColor = InColor;
+	OutColor = InColor;	
 }

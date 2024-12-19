@@ -22,7 +22,9 @@ class FTriangleVertexBuffer : public FVertexBuffer
 {
 public:
 	/** Initialize the RHI for this rendering resource */
-	void InitRHI() override {
+	void InitRHI(FRHICommandListBase& RHICmcList) override {
+
+		// This is a Numa Array type, technically I am just using this object to obtain the correct size the RHI CMD will require.
 		TResourceArray<FColorVertex, VERTEXBUFFER_ALIGNMENT> Vertices;
 		Vertices.SetNumUninitialized(3);
     	
@@ -36,7 +38,10 @@ public:
 		Vertices[2].Color = FVector4f(0, 0, 1, 1);
     
 		FRHIResourceCreateInfo CreateInfo(TEXT("FScreenRectangleVertexBuffer"), &Vertices);
-		VertexBufferRHI =  RHICreateVertexBuffer(Vertices.GetResourceDataSize(), BUF_Static, CreateInfo);
+		// Create Vertex Buffer
+		// Since this is Statically allocated once to the GPU, we don't need to lock it on the Render Thread to wait for it to be dealt with.
+		VertexBufferRHI = RHICmcList.CreateVertexBuffer(Vertices.GetResourceDataSize(),EBufferUsageFlags::Static,CreateInfo);
+		
 	}
 };
 extern TRIANGLESHADERMODULE_API TGlobalResource<FTriangleVertexBuffer> GTriangleVertexBuffer;
@@ -44,17 +49,18 @@ class FTriangleIndexBuffer : public FIndexBuffer
 {
 public:
 	/** Initialize the RHI for this rendering resource */
-	void InitRHI() override
+	void InitRHI(FRHICommandListBase& RHICmdList) override
 	{
-		const uint16 Indices[] = { 0, 1, 2 };
+		const uint32 Indices[] = { 0, 1, 2 };
 
-		TResourceArray<uint16, INDEXBUFFER_ALIGNMENT> IndexBuffer;
+		TResourceArray<uint32, INDEXBUFFER_ALIGNMENT> IndexBuffer;
 		uint32 NumIndices = UE_ARRAY_COUNT(Indices);
 		IndexBuffer.AddUninitialized(NumIndices);
-		FMemory::Memcpy(IndexBuffer.GetData(), Indices, NumIndices * sizeof(uint16));
-
+		FMemory::Memcpy(IndexBuffer.GetData(), Indices, NumIndices * sizeof(uint32));
+		// RHICreateIndexBuffer
 		FRHIResourceCreateInfo CreateInfo(TEXT("FTriangleIndexBuffer"), &IndexBuffer);
-		IndexBufferRHI = RHICreateIndexBuffer(sizeof(uint16), IndexBuffer.GetResourceDataSize(), BUF_Static, CreateInfo);
+		IndexBufferRHI = RHICmdList.CreateIndexBuffer(sizeof(uint32), IndexBuffer.GetResourceDataSize(),BUF_Static,CreateInfo);
+		
 	}
 };
 extern TRIANGLESHADERMODULE_API TGlobalResource<FTriangleIndexBuffer> GTriangleIndexBuffer;
@@ -69,10 +75,10 @@ public:
 	/** Destructor. */
 	virtual ~FTriangleVertexDeclaration() {}
 
-	virtual void InitRHI()
+	virtual void InitRHI(FRHICommandListBase& RHICmdList)
 	{
 		FVertexDeclarationElementList Elements;
-		uint16 Stride = sizeof(FColorVertex);
+		uint32 Stride = sizeof(FColorVertex);
 		Elements.Add(FVertexElement(0, STRUCT_OFFSET(FColorVertex, Position), VET_Float2, 0, Stride));
 		Elements.Add(FVertexElement(0, STRUCT_OFFSET(FColorVertex, Color), VET_Float4, 1, Stride));
 		VertexDeclarationRHI = PipelineStateCache::GetOrCreateVertexDeclaration(Elements);

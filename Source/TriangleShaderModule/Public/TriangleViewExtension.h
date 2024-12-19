@@ -70,7 +70,7 @@ public:
 FRDGBuilder& GraphBuilder,
 const FGlobalShaderMap* ViewShaderMap,
 const FIntRect& View,
-const FScreenPassTexture& SceneColor);
+const FScreenPassTexture& InSceneColor);
 	
 };
 
