@@ -41,6 +41,7 @@ FScreenPassTextureViewportParameters GetTextureViewportParameters(const FScreenP
 
 	return Parameters;
 }
+
 FSceneTextureParameters GetSceneTextureParameters(FRDGBuilder& GraphBuilder, const FSceneTextures& SceneTextures)
 {
 	const auto& SystemTextures = FRDGSystemTextures::Get(GraphBuilder);
@@ -63,6 +64,7 @@ FSceneTextureParameters GetSceneTextureParameters(FRDGBuilder& GraphBuilder, con
 
 	return Parameters;
 }
+
 FVector2f GetInputViewportSize2f(const FIntRect& Input, const FIntPoint& Extent)
 {
 	// Based on
@@ -92,7 +94,7 @@ void FTriangleViewExtension::PreRenderView_RenderThread(FRDGBuilder& GraphBuilde
 		
 }
 
-void FTriangleViewExtension::SubscribeToPostProcessingPass(EPostProcessingPass Pass, FAfterPassCallbackDelegateArray& InOutPassCallbacks, bool bIsPassEnabled)
+void FTriangleViewExtension::SubscribeToPostProcessingPass(EPostProcessingPass Pass, const FSceneView& InView, FAfterPassCallbackDelegateArray& InOutPassCallbacks, bool bIsPassEnabled)
 {
 	if (Pass == EPostProcessingPass::Tonemap)
 	{
