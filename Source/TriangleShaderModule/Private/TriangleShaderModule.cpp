@@ -1,10 +1,10 @@
 #include "TriangleShaderModule.h"
 
-void FTriangleShaderModule::StartupModule()
-{
-	FString PluginBaseDirectory = IPluginManager::Get().FindPlugin(TEXT("TriangleShaderModule"))->GetBaseDir();
-	FString PluginShaderDirectory = FPaths::Combine(PluginBaseDirectory, TEXT("Shaders"));
-	AddShaderSourceDirectoryMapping(TEXT("/TriangleShaderModule"), PluginShaderDirectory);
+void FTriangleShaderModule::StartupModule(){
+	
+	FString BaseDir = FPaths::Combine(FPaths::GameSourceDir(), TEXT("TriangleShaderModule"));
+	FString ModuleShaderDir = FPaths::Combine(BaseDir, TEXT("Shaders"));
+	AddShaderSourceDirectoryMapping(TEXT("/TriangleShaderModule"), ModuleShaderDir);
 }
 
 void FTriangleShaderModule::ShutdownModule()
